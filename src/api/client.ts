@@ -1,7 +1,8 @@
 import axios from 'axios'
 import type { Application, ApplicationRequest, Analytics, SponsorResult, JobScoreResult } from '../types'
 
-const api = axios.create({ baseURL: '/api' })
+const BASE = import.meta.env.VITE_API_BASE ? `${import.meta.env.VITE_API_BASE}/api` : '/api'
+const api = axios.create({ baseURL: BASE })
 
 export const applicationApi = {
   getAll: () => api.get<Application[]>('/applications').then(r => r.data),
