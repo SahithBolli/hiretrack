@@ -1,12 +1,32 @@
-import { useQuery } from '@tanstack/react-query'
+import { useState } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
-import { Briefcase, Shield, TrendingUp, AlertCircle, Plus } from 'lucide-react'
-import { applicationApi } from '../api/client'
+import { Briefcase, Shield, TrendingUp, AlertCircle, Plus, Sparkles, CheckCircle } from 'lucide-react'
+import { applicationApi, jobApi } from '../api/client'
 import StatusBadge from '../components/StatusBadge'
 
 export default function Dashboard() {
+  const qc = useQueryClient()
   const { data: apps = [] } = useQuery({ queryKey: ['applications'], queryFn: applicationApi.getAll })
   const { data: analytics } = useQuery({ queryKey: ['analytics'], queryFn: applicationApi.analytics })
+  const [importUrl, setImportUrl] = useState('')
+  const [importing, setImporting] = useState(false)
+  const [importResult, setImportResult] = useState<{ company: string; role: string; score?: number } | null>(null)
+  const [importError, setImportError] = useState('')
+
+  const handleImport = async () => {
+    if (!importUrl.trim()) return
+    setImporting(true); setImportError(''); setImportResult(null)
+    try {
+      const app = await jobApi.importFromUrl(importUrl)
+      setImportResult({ company: app.company, role: app.role, score: app.score })
+      setImportUrl('')
+      qc.invalidateQueries({ queryKey: ['applications'] })
+      qc.invalidateQueries({ queryKey: ['analytics'] })
+    } catch {
+      setImportError('Import failed. Check backend is running and keys are set.')
+    } finally { setImporting(false) }
+  }
 
   const stats = [
     { label: 'Total Applications', value: analytics?.totalApplications ?? 0, icon: Briefcase, color: 'text-primary-400' },
@@ -40,6 +60,33 @@ export default function Dashboard() {
             <p className="text-2xl font-bold text-white">{value}</p>
           </div>
         ))}
+      </div>
+
+      {/* AI Import */}
+      <div className="card border-primary-800/50">
+        <h2 className="text-sm font-semibold text-white mb-1 flex items-center gap-2">
+          <Sparkles size={14} className="text-primary-400" /> AI Job Import
+        </h2>
+        <p className="text-xs text-slate-500 mb-3">Paste any job URL — AI fetches, scores, and saves it automatically</p>
+        <div className="flex gap-3">
+          <input
+            className="input flex-1"
+            value={importUrl}
+            onChange={e => setImportUrl(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && handleImport()}
+            placeholder="https://jobs.lever.co/... or LinkedIn/Indeed/Greenhouse URL"
+          />
+          <button onClick={handleImport} disabled={importing} className="btn-primary flex items-center gap-2 shrink-0">
+            <Sparkles size={14} /> {importing ? 'Importing...' : 'Import'}
+          </button>
+        </div>
+        {importResult && (
+          <div className="flex items-center gap-2 mt-2 text-green-400 text-xs">
+            <CheckCircle size={13} />
+            <span>Saved: <strong>{importResult.company}</strong> — {importResult.role} {importResult.score ? `(${importResult.score}/5)` : ''}</span>
+          </div>
+        )}
+        {importError && <p className="text-red-400 text-xs mt-2">{importError}</p>}
       </div>
 
       {/* Deadline alerts */}

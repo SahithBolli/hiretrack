@@ -24,6 +24,7 @@ export const sponsorApi = {
 
 export const jobApi = {
   score: (payload: object) => api.post<JobScoreResult>('/jobs/score', payload).then(r => r.data),
+  importFromUrl: (url: string) => api.post<Application>('/jobs/import-url', { url }).then(r => r.data),
   checkLevel: (title: string) => api.get(`/jobs/check-level?title=${encodeURIComponent(title)}`).then(r => r.data),
   topJobs: (minScore = 4.0) => api.get(`/jobs/top?minScore=${minScore}`).then(r => r.data),
   sponsored: () => api.get('/jobs/sponsored').then(r => r.data),
