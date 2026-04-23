@@ -12,6 +12,9 @@ export const applicationApi = {
   updateStatus: (id: number, status: string) => api.patch<Application>(`/applications/${id}/status?status=${status}`).then(r => r.data),
   delete: (id: number) => api.delete(`/applications/${id}`),
   analytics: () => api.get<Analytics>('/applications/analytics').then(r => r.data),
+  downloadResume: (id: number) => `${api.defaults.baseURL}/applications/${id}/resume`,
+  deleteResume: (id: number) => api.delete(`/applications/${id}/resume`),
+  deleteCover: (id: number) => api.delete(`/applications/${id}/cover`),
 }
 
 export const sponsorApi = {

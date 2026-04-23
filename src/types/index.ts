@@ -15,6 +15,9 @@ export interface Application {
   appliedDate?: string
   deadlineDate?: string
   createdAt?: string
+  coverLetter?: string
+  resumeBase64?: string
+  resumeFileName?: string
 }
 
 export interface ApplicationRequest {
